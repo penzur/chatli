@@ -71,10 +71,7 @@ function socketOnEndHandler() {
   sockets.splice(index, 1);
   if (sock.nickname) {
     console.log(`[ Socket Server ] - user ${sock.nickname} disconnected!`);
-    broadcast(
-      sockets,
-      `${sock.nickname} disconnected from the server`
-    );
+    broadcast(sockets, `${sock.nickname} disconnected from the server`);
   }
 };
 
@@ -119,9 +116,8 @@ function socketOnDataHandler(data) {
 
     sockets.push(sock);
 
-
-    sock.write('Congrats! You are now registered as ' + nickname + '\n');
     console.log(`[ Socket Server ] - user ${nickname} joined the server`);
+    sock.write('Congrats! You are now registered as ' + nickname + '\n');
     broadcast(sockets, `${sock.nickname} joined`, sock);
 
     clearTimeout(sock.timeout);
@@ -151,7 +147,7 @@ require('net')
     sock.on('data', socketOnDataHandler.bind(sock));
   })
 
-  // Bind
+  // Run it
   .listen(port, () => {
     console.log('[ Socket Server ] - Now accepting connection on port ' + port);
   });

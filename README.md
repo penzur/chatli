@@ -3,7 +3,7 @@
 
 Demo cli-based chat application written entirely in Node.JS
 
-![demo](./chatli.gif)
+![demo](./sc.gif)
 
 #### Requirements
 - Node v7+
@@ -14,9 +14,9 @@ Demo cli-based chat application written entirely in Node.JS
 
 0. Get the source code first `git clone https://github.com/elizar/chatli.git && cd chatli`
 
-0. Yarn is optional but it's faster than npm so `npm i -g yarn`
+0. Run `npm i -g yarn`
 
-0. `yarn` or `npm install` it's up to you.
+0. `yarn` or `npm install` up to you bruh.
 
 #### Try it!
 

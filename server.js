@@ -23,7 +23,7 @@ SOFTWARE.
 'use strict';
 
 const sockets = [];
-const port = process.env.CHATLI_PORT || 31337;
+const port = process.env.PORT || 31337;
 
 /**
  * Format's the message to be sent to the clients

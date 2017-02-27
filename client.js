@@ -34,18 +34,52 @@ require('colors');
 // }
 //
 // Pretty basic ey?
-
-// messages container
 const messages = [];
-// Chat server
 const cs = new require('net').Socket();
+const port = process.env.PORT || 31337;
 
+/**
+ * Parses a given server string
+ * i.e: localhost:31337 becomes { host: 'locahost', port: 31337 }
+ *
+ * @param uri {String}
+ *
+ * @returns {Object} defaults to localhost and 31337
+ */
+const parseURI = (uri = '') => {
+  const arr = uri.trim().split(':');
+  return {
+    host: arr[0] || 'localhost',
+    port: arr[1] || 31337
+  };
+};
 
-/****************************************************************************
+/**
+ * Initialize default config for the client
+ */
+let config = parseURI();
+
+/**
+ * Returns a timestamped object with the given nickname and message
  *
- *                            - Draw Methods -
+ * @param nickname {String}
+ * @param message {String}
  *
- ****************************************************************************/
+ * @returns {Object}
+ */
+const formatMessage = (nickname, message) => {
+  return {
+    timestamp: Date.now(),
+    nickname,
+    message
+  };
+};
+
+/**
+ * Renders the entire tty screen
+ *
+ * @returns undefined
+ */
 const draw = () => {
   // Get dimension
   const columns = process.stdout.columns;
@@ -75,11 +109,17 @@ const draw = () => {
 
       // Timestamped message
       if (item && item  !== -1) {
-        const tt = (new Date(item.timestamp)).toLocaleTimeString();
-        let msg = `${tt.dim} <${item.nickname}> - ${item.message.dim}`;
+        const timestamp = (new Date(item.timestamp)).toLocaleTimeString();
+        const nickname = item.nickname;
 
-        if (item.nickname === 'server') {
-          msg = `[ ${'Server'.cyan.dim} ] - ${item.message.magenta.dim}`
+        let nickPrompt = `<${item.nickname}>`;
+        if (cs.nickname === item.nickname) {
+          nickPrompt = '>';
+        }
+        let msg = `${timestamp.dim} ${nickPrompt} ${item.message}`;
+
+        if (nickname.match(/(server|chatli)/i)) {
+          msg = `[ ${nickname.toUpperCase().cyan} ] - ${item.message.magenta}`
         }
 
         return console.log(msg);
@@ -94,10 +134,10 @@ const draw = () => {
   process.stdout.write(`\r[~] ${pre}`);
 }
 
-// Draw
+// Init draw
 draw();
 
-// Data
+// On data
 cs.on('data', d => {
   let nickname = '';
   let message = '';
@@ -116,29 +156,63 @@ cs.on('data', d => {
   }
 
   message.split('\n').forEach(m => {
-    messages.push({
-      timestamp: Date.now(),
-      nickname,
-      message: m
-    });
+    messages.push(formatMessage(nickname, m));
   });
 
   draw();
 });
 
+// On end
+cs.on('end', () => {
+  messages.push(formatMessage('chatli', 'Disconnected!'));
+  draw();
+});
+
+// On connect
+cs.on('connect', () => {
+  messages.push(formatMessage('chatli', 'Connection Established!'));
+  draw();
+});
+
+// On error
+cs.on('error', e => {
+  messages.push(formatMessage(
+    'Chatli',
+    e.message
+  ));
+
+  draw();
+});
+
+cs.on('connect', () => {
+});
+
 // read user inputs
 process.stdin.on('data', (d) => {
-  // If socket is not yet writable/connected
-  if (!cs.writable) return draw();
-
   // Trim message
   const tm = d.toString().trim();
 
   // Ignore empty
   if (tm === '') return draw();
 
-  // On quit
+  // quit cmd
   if (tm.match(/^\/(quit|close|exit)/i)) process.exit(1);
+  // connect cmd
+  if (tm.match(/^\/connect/i) && !cs.writable) {
+    // update config
+    config = parseURI(tm.split('/connect')[1].trim());
+    // then connect
+    cs.connect(config);
+  }
+
+  // If socket is not yet writable/connected
+  if (!cs.writable) {
+    messages.push(formatMessage(
+      'Chatli',
+      'You are disconnected. Connect with /connect <server:port>'
+    ));
+    return draw();
+  }
 
   // If not yet registered
   if (!cs.nickname && !tm.match(/^\/nick/i)) {
@@ -150,4 +224,4 @@ process.stdin.on('data', (d) => {
   draw();
 });
 
-cs.connect(process.env.CHAT_SERVER || 31337);
+cs.connect(config);

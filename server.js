@@ -138,8 +138,15 @@ require('net')
 
     // attach timeout to socket object so we can access it from event handlers
     sock.timeout = setTimeout(() => {
+      // Make sure socket is still active. Otherwise, we remove it
+      if (!sock.writable) {
+        clearTimeout(sock.timeout);
+        sockets.splice(sockets.indexOf(sock, 1));
+        return;
+      }
+
       sock.write('You did not register\n');
-      sock.write('Disconnecting...\n');
+      sock.write('Bye!\n');
       sock.end();
     }, 1000 * 20);
 

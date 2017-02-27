@@ -115,10 +115,12 @@ cs.on('data', d => {
     }
   }
 
-  messages.push({
-    timestamp: Date.now(),
-    nickname,
-    message
+  message.split('\n').forEach(m => {
+    messages.push({
+      timestamp: Date.now(),
+      nickname,
+      message: m
+    });
   });
 
   draw();

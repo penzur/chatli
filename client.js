@@ -114,12 +114,13 @@ const draw = () => {
 
         let nickPrompt = `<${item.nickname}>`;
         if (cs.nickname === item.nickname) {
+          item.message = item.message.dim;
           nickPrompt = '>';
         }
         let msg = `${timestamp.dim} ${nickPrompt} ${item.message}`;
 
         if (nickname.match(/(server|chatli)/i)) {
-          msg = `[ ${nickname.toUpperCase().cyan} ] - ${item.message.magenta}`
+          msg = `[ ${nickname.toUpperCase()} ] - ${item.message}`.red;
         }
 
         return console.log(msg);
